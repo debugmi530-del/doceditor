@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "DocEditor — редактор документов"
+version = "1.0.0"
+id = "artifacts/doceditor"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 18755
+
+[services.development]
+run = "pnpm --filter @workspace/doceditor run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/doceditor", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/doceditor", "run", "serve" ]
+
+[services.env]
+PORT = "18755"
+BASE_PATH = "/"
