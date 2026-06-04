@@ -7,7 +7,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Doc, DocType, getWordCount } from '@/types/document';
+import { Doc, DocType } from '@/types/document';
 import { generateId } from '@/utils/fileUtils';
 
 const STORAGE_KEY = '@doceditor_documents_v1';

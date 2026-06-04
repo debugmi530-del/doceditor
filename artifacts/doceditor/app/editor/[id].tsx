@@ -51,6 +51,7 @@ export default function EditorScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [fontSize, setFontSize] = useState(14);
   const [wordWrap, setWordWrap] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
 
   const [showInfo, setShowInfo] = useState(false);
   const [showFind, setShowFind] = useState(false);
@@ -71,10 +72,23 @@ export default function EditorScreen() {
         const p = JSON.parse(s);
         setFontSize(p.fontSize ?? 14);
         setWordWrap(p.wordWrap ?? true);
+        setAutoSave(p.autoSave ?? true);
       }
     })();
   }, []);
 
+
+  // Sync title/content if doc wasn't ready on first render
+  const [docSynced, setDocSynced] = useState(!!doc);
+  useEffect(() => {
+    if (!docSynced && doc) {
+      setTitle(doc.title);
+      setContent(doc.content);
+      lastSavedTitle.current = doc.title;
+      lastSavedContent.current = doc.content;
+      setDocSynced(true);
+    }
+  }, [docSynced, doc]);
   const saveNow = useCallback(async () => {
     if (!doc) return;
     if (title === lastSavedTitle.current && content === lastSavedContent.current) return;
@@ -86,10 +100,11 @@ export default function EditorScreen() {
   }, [doc, id, title, content, updateDoc]);
 
   useEffect(() => {
+    if (!autoSave) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(saveNow, AUTOSAVE_MS);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [title, content, saveNow]);
+  }, [title, content, saveNow, autoSave]);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: '' });

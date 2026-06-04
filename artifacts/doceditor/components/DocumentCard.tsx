@@ -58,7 +58,6 @@ export function DocumentCard({ doc, onPress, onDelete, onToggleFavorite }: Props
               name="star"
               size={16}
               color={doc.isFavorite ? '#F7B731' : colors.mutedForeground}
-              style={doc.isFavorite ? { fill: '#F7B731' } as any : undefined}
             />
           </Pressable>
           <Pressable
