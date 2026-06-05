@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -55,3 +58,40 @@ jobs:
           name: doceditor-debug-${{ github.run_number }}
           path: artifacts/doceditor/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+      - name: Delete old release if exists
+        run: |
+          OLD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/latest-debug \
+            | node -e "try{process.stdout.write(String(JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).id||''))}catch(e){}")
+          if [ -n "$OLD_ID" ]; then
+            curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              https://api.github.com/repos/${{ github.repository }}/releases/$OLD_ID
+          fi
+          OLD_TAG_SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/git/refs/tags/latest-debug \
+            | node -e "try{process.stdout.write(JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).object?.sha||'')}catch(e){}")
+          if [ -n "$OLD_TAG_SHA" ]; then
+            curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              https://api.github.com/repos/${{ github.repository }}/git/refs/tags/latest-debug
+          fi
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-debug
+          name: "DocEditor APK (сборка #${{ github.run_number }})"
+          body: |
+            Автоматическая debug-сборка Android APK.
+            Коммит: ${{ github.sha }}
+            Сборка: #${{ github.run_number }}
+
+            **Как установить:**
+            1. Скачайте `app-debug.apk` ниже
+            2. На телефоне: Настройки → Безопасность → Разрешить из неизвестных источников
+            3. Откройте скачанный файл и установите
+          files: artifacts/doceditor/android/app/build/outputs/apk/debug/app-debug.apk
+          prerelease: true
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
